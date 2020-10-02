@@ -10,6 +10,7 @@ Projeto final da disciplina de EDA
 
 - [ ] História (textual)
     - [ ] Passagem de tempo (4 partes)
+    - [X] Implementação de Função para Impressão
     - [ ] Escrita dos Diálogos das Quests
         - [ ] Quest 1
         - [ ] Quest 2
@@ -40,6 +41,6 @@ Projeto final da disciplina de EDA
     - [ ] Funções de Operações do Player
     - [ ] Funções de Operações dos Inimigos
 
-- [ ] \(Opcional) Arte dos inimigos ASCII
+- [X] \(Opcional) Arte dos inimigos ASCII
 - [ ] \(Opcional) Texto colorido
 - [ ] \(Opcional) Mais inimigos
