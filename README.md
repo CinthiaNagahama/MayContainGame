@@ -9,11 +9,37 @@ Projeto final da disciplina de EDA
 ## Objetivos:
 
 - [ ] História (textual)
-- [ ] Passagem de tempo (4 partes)
-- [ ] Cartas (3 de Ataque | 1 de Defesa | 1 de Cura)
+    - [ ] Passagem de tempo (4 partes)
+    - [ ] Escrita dos Diálogos das Quests
+        - [ ] Quest 1
+        - [ ] Quest 2
+        - [ ] Quest 3
+    - [ ] Implementação dos Diálogos das Quests
+        - [ ] Quest 1
+        - [ ] Quest 2
+        - [ ] Quest 3
+    - [ ] Definição dos Pontos de Possíveis Batalhas
+        - [ ] Quest 1
+        - [ ] Quest 2
+        - [ ] Quest 3
+- [X] Cartas (9 de Ataque | 3 de Defesa | 3 de Cura)
 - [ ] Inimigos (3 tipos de inimigos)
-- [ ] Começo e Fluxo de Batalha
+    - [ ] Stats
+    - [ ] Comportamento
+- [ ] Fluxo de Batalha
+    - [X] Preparação do Deck
+    - [ ] Geração de Inimigos
+    - [X] Funções de Controle do Deck
+    - [ ] Implementação dos Efeitos das Cartas
+        - [ ] Ataque
+        - [ ] Cura
+        - [ ] Saque
+        - [ ] Previne
+        - [ ] Escudo
+    - [ ] Cálculo de Dano
+    - [ ] Funções de Operações do Player
+    - [ ] Funções de Operações dos Inimigos
 
-- [ ] \(Opicional) Arte dos inimigos ASCII
-- [ ] \(Opicional) Texto colorido
-- [ ] \(Opicional) Mais inimigos
+- [ ] \(Opcional) Arte dos inimigos ASCII
+- [ ] \(Opcional) Texto colorido
+- [ ] \(Opcional) Mais inimigos
