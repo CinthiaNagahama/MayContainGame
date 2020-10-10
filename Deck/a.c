@@ -4,7 +4,6 @@
 #include <locale.h>
 #include "deck.h"
 
-
 int main(void)
 {   
     // arquivo de testes so para verificar se as funcoes estao ok
@@ -62,5 +61,6 @@ int main(void)
     libera_deck(fi);
     libera_mao(mi);
     libera_db_carta(); // OK
+    printf("Se voce esta lendo isso, parabens, provavelmente ta tudo certo.\n");
     return 0;
 }

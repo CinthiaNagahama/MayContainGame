@@ -16,6 +16,11 @@ typedef struct databasecarta{
     Carta carta_info; // dados da carta
 } DatabaseCarta; // estrutura do array global que servirá de banco de dados das cartas
 
+typedef struct elemento{
+    int info;
+    struct elemento* prox;
+} Elem;
+
 typedef struct deck Deck; // ponteiro de fila estática para o Deck
 typedef struct mao Mao; // ponteiro de lista estática para a Mao
 

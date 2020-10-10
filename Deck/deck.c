@@ -22,9 +22,9 @@
 // Funcao de resetar o database para nova batalha       OK
 
 struct deck {
-    int inicio, final, qtd;
-    int info[30]; // armazena somente os IDs das cartas no deck para poupar memoria [METODO INT] (acho melhor)
-    // Carta info[30]; // armazena todas as informações da carta no deck [METODO CARTA]
+    int qtd;
+    Elem* inicio;
+    Elem* final;
 }; // estrutura da fila (Deck)
 
 struct mao {
@@ -209,14 +209,22 @@ Deck* cria_deck(){
         exit(1);
     }
     // se ok, inicializa a mesma
-    fi->inicio = 0;
-    fi->final = 0;
+    fi->inicio = NULL;
+    fi->final = NULL;
     fi->qtd = 0;
     return fi;
 }
 
 void libera_deck(Deck* fi){
-    free(fi);
+    if (fi != NULL){
+        Elem* no;
+        while (fi->inicio != NULL){
+            no = fi->inicio;
+            fi->inicio = fi->inicio->prox;
+            free(no);
+        }
+        free(fi);
+    }
 }
 
 int deck_cheio(Deck* fi){
@@ -236,9 +244,18 @@ int insere_deck(Deck* fi, int idcarta){
         return -1;
     if (fi->qtd == 30) // se deck cheio, não realiza operação
         return 0;
-    // fi->info[fi->final] = carta_db[cartaid].carta_info; // puxa info da carta do array DB [MÉTODO CARTA]
-    fi->info[fi->final] = idcarta; // armazena ID da carta para consulta no array DB [MÉTODO INT]
-    fi->final = (fi->final + 1) % 30; // incrementa o contador final dentro do modulo
+    Elem* p = (Elem*) malloc(sizeof(Elem));
+    if (p == NULL){
+        printf("Deck element creation failed: Low memo.\n");
+        return 0;
+    }
+    p->info = idcarta; // armazena ID da carta para consulta no array DB [MÉTODO INT]
+    p->prox = NULL;
+    if(fi->final == NULL)
+        fi->inicio = p;
+    else
+        fi->final->prox = p;
+    fi->final = p;
     fi->qtd++; // incrementa o contador quantidade
     return 1;
 }
@@ -248,7 +265,11 @@ int remove_deck(Deck* fi){
         return -1;
     if (fi->qtd == 0) // se deck vazio, então impossível
         return 0;
-    fi->inicio = (fi->inicio + 1) % 30; // move a posição do início
+    Elem* p = fi->inicio;
+    fi->inicio = fi->inicio->prox;
+    if(fi->inicio == NULL)
+        fi->final = NULL;
+    free(p);
     fi->qtd--;
     return 1;
 }
@@ -258,8 +279,7 @@ int consulta_deck(Deck* fi, int *idcarta){
         return -1;
     if (fi->qtd == 0) // se deck vazio, então impossível
         return 0;
-    // *idcarta = fi->info[fi->inicio].ID_carta; // puxa ID da primeira carta da fila por referência [MÉTODO CARTA]
-    *idcarta = fi->info[fi->inicio]; // puxa ID da primeira carta da fila por referência [MÉTODO INT]
+    *idcarta = fi->inicio->info; // puxa ID da primeira carta da fila por referência [MÉTODO INT]
     return 1;
 }
 
@@ -421,9 +441,12 @@ int usa_carta(Mao* mi, int index, int *idconsulta){
 }
 
 void imprime_deck(Deck* fi){
-    int i, tam = fi->qtd;
-    for(i = fi->inicio; tam > 0; i = (i + 1) % 30, tam--){
-        printf("Carta %i: %i | ", i, fi->info[i]);
+    Elem* p = fi->inicio;
+    int i = 1;
+    while(p != NULL){
+        printf("Carta %2i: %2i | ", i, p->info);
+        p = p->prox;
+        i++;
     }
     printf("\n");
 }
@@ -432,5 +455,5 @@ void imprime_mao(Mao* mi){
     int i, tam = 5;
     printf("Mao:\n");
     for(i = 0; i < tam; i++)
-        printf("ID: %i | Nome: %s | Elem: %s | Efeito: %s | Mult: %.02f\nDesc:\n%s\n", mi->info[i].ID_carta, mi->info[i].nome_carta, mi->info[i].elemento_carta, mi->info[i].efeito, mi->info[i].multiplicador_carta, mi->info[i].descricao);
+        printf("ID: %2i | Nome: %s | Elem: %s | Efeito: %s | Mult: %5.02f\nDesc:\n%s\n", mi->info[i].ID_carta, mi->info[i].nome_carta, mi->info[i].elemento_carta, mi->info[i].efeito, mi->info[i].multiplicador_carta, mi->info[i].descricao);
 }
