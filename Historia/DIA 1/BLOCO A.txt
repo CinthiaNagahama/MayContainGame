@@ -1,38 +1,202 @@
-    Era manhã na pequena taverna de Cynder - famosa na região por atrair caçadores de recompensa - e um mago
-tomava seu café da manhã em paz, enquanto avaliava trabalhos que poderia fazer no caminho para Idlebridge
-- digo, Idebrigge. No mural haviam três panfletos (sim, daqueles destacáveis com o número de telefone. 
-Essa vila já era demasiadamente moderna):
-                                      ,------------------------,
-                                      | TRABALHOS PARA SEMANA: |
-                                      '------------------------'
-                ,---------------------, ,---------------------, ,---------------------,
-                |          1          | |          2          | |          3          |
-                |  Escoltar alguém e  | |  Levar algo e talz  | |  Matar algo e talz  |
-                |        talz         | |                     | |                     |
-                |                     | |                     | |                     |
-                | Escoltar Sir Fulano | | Caso aceite,procure | | Socorro!!!!!!!!!!!! |
-                | até os estábulos de | | pelo mestre da      | | Mate o monstro!!!!! |
-                | Idebrigge.          | | filial da guilda    | | Ele está no caminho |
-                | Caso aceite, chamar | | da vila para        | | para Idebrigge.     |
-                | por Sir Fulano no   | | receber mais        | |                     |
-                | Hotel.              | | detalhes.           | |         - Moradores |
-                | ------------------- | | ------------------- | | ------------------- |
-                |          Recompensa | |          Recompensa | |          Recompensa |
-                |                100G | |                200G | |                300G |
-                '---------------------' '---------------------' '---------------------'
-    Você gostaria de fazer algum dos trabalhos:
-    ,--------------,
-    |    Sim       |
-    |    Não       |
-    | -> Tanto faz |
-    '--------------'
+				A cidade de Townsv- Desculpe, script errado, só um minuto...
 
-    [se não:] "Ok, thanks, bye" * fecha jogo *
-    [se tanto faz:] "Você não tem escolha: você TEM que escolher"
-    [se sim:] "Qual você quer fazer?"
-    [int 1, 2 ou 3.]
-    [se 1:] você pega o papel e vai até o hotel encontrar com o Sir Fulano
-    [se 2:] você pega o papel e fala com o balconista Ella e pergunta como entrar em contato com o mestre da filial
-          da guilda (ela te faz pular o balcao e você faz um teste de acrobacia)[se > 40 você falha e cai e ela
-          abre a portinha do balcao para voce passar]
-    [se 3:] você só sai
+				A vila de Cynder! A vilazinha mais feliz, mais limpa, mais segura do mundo. Lar dos
+				guardas Não-Tão-Poderosos, do sábio, do prefeito, da srta Ella, da srta Sem Nome Do Hotel,
+				e do muito bem-intencionado-mas-sempre-em-perigo povo de Cynder!
+
+				Era mais uma manhã normal na pequena taverna da vila - que era famosa na região por atrair
+				aventureiros e caçadores de recompensa (além de bárbaros, saqueadores, monstros e o pior de todos os
+				tipos de pragas: bardos) - e você, um mago, se preparava para uma jornada até a cidade de Idlebridge,
+				digo, Idebrigge. Você tomava seu café da manhã em paz enquanto ouvia as notícias da Caixa Mágica de
+				Entretenimento e Notícias, conhecida pela peble como CEN (acredite em mim, você não vai querer
+				incluir o "Mágica" nessa sigla):
+
+				 .------------------.
+				/ William Newsgreat: \----------------------------------------------------------------------------.
+				| "Esportes. Os Patéticos Mágicos perderam a partida de Quadribol ontem para os Azarados Macabros |
+				| por quatro sets a dois. Tadeus Buffer tem as notícias."                                         |
+				'-------------------------------------------------------------------------------------------------'
+
+				 .--------------.
+				/ Tadeus Buffer: \-----------------------------------------------------------------------------------.
+				| "O jogo começou pateticamente bem para os Patéticos, ganhando o primeiro set por trinta a zero,    |
+				| mas os Macabros logo viraram o jogo e demonstraram que não dependem da sorte para vencer e levaram |
+				| os dois últimos sets de lavada! Bjorn Federerth quase não deixou seu parceiro jogar. A fome era    |
+				| tanta que o pobre do Raphael quase não tocou na bola! Olha pra isso! Mesmo com o trabalho em       |
+				| equipe da dupla, os Patéticos Mágicos não eram páreos para o Federerth!"                           |
+				'----------------------------------------------------------------------------------------------------'
+
+				 .---------------------.
+				/ Georgeth Kuertenberg: \----------------------------------------------------------------------------.
+				| "Foi uma partida difícil, né, o Federerth não deu chance para a gente respirar, né, mas foi um bom |
+				| jogo, né. Mas o esporte é assim, né, a gente às vezes perde, a gente às vezes ganha, e quem joga   |
+				| melhor é quem ganha, né. A gente até jogou bem ao meu ver, né, mas não foi o suficiente pra        |
+				| acompanhar o jogo deles, né."                                                                      |
+				'----------------------------------------------------------------------------------------------------'
+
+				 .--------------.
+				/ Tadeus Buffer: \-----------------------------------------------------------------------------------.
+				| "Mesmo dizendo isso, Kuertenberg foi flagrado quebrando a própria raquete-vassoura antes de entrar |
+				| no vestiário."                                                                                     |
+				'----------------------------------------------------------------------------------------------------'
+
+				 .----------------.
+				/ Bjorn Federerth: \------------------------------------------.
+				| "Nós somos melhores e é isso. Nâo tem mais o que comentar." |
+				'-------------------------------------------------------------'
+
+				 .--------------.
+				/ Tadeus Buffer: \---------------------.
+				| "É com você aí no estúdio, William." |
+				'--------------------------------------'
+
+				 .------------------.
+				/ William Newsgreat: \-------------------------------------------------------------------.
+				| "É, Tadeus, é bom ver que o Federerth ainda tem humildade. E agora, tragédias.         |
+				| Na noite passada, um mercador foi atacado no caminho para Idlebr... Ibegri... Idre..." |
+				'----------------------------------------------------------------------------------------'
+
+				 .--------------------.
+				/ Voz atrás da câmera: \
+				| "Idebrigge!"         |
+				'----------------------'
+
+				 .------------------.
+				/ William Newsgreat: \-------------------------------------------------------------------------------------.
+				| "... no caminho para Idebrigge. Os guardas relatam que o mercador chegou à cidade em estado grave, com   |
+				| feridas por todo o corpo, e foi levado ao curandeiro assim que o avistaram. Com o Festival da Mariposa   |
+				| Sagrada Com Cabeça de Dragão da Lua Cor-de-Rosa Flamejante se aproximando, os moradores da cidade têm se |
+				| mostrado preocupados que os ataques acabem afogentando os turistas e que isso acabe forçando o           |
+				| cancelamento do Festival. Só esse mês, vinte e seis pessoas sofreram ataques de monstro nos arredores de |
+				| Idle... da cidade. Onze pessoas não resistiram e faleceram na tenda do curandeiro e outras cinco foram   |
+				| encontradas mortas com as mesmas feridas. Outros setes bardos também foram atacados. Infelizmente, todos |
+				| os sete passam bem. E agora, mais tragédias, um bardo foi flagrado tentando entrar em uma taverna para   |
+				| se apresentar. Felizmente, os guardas chegaram antes que ele começasse..."                               |
+				'----------------------------------------------------------------------------------------------------------'
+				
+				O noticiário continuava e as pessoas ali presentes, uma a uma começavam a comentar as notícias:
+
+				 .----------.
+				/ Pessoa #1: \-----------------------------------------------------------------.
+				| "Mais um ataque de monstro? Como se os bandidos já não fossem o bastante..." |
+				'------------------------------------------------------------------------------'
+
+				 .----------.
+				/ Pessoa #2: \-----------------------------------------------.
+				| "Viajar até a cidade está ficando cada vez mais perigoso." |
+				'------------------------------------------------------------'
+
+				 .----------.
+				/ Pessoa #3: \-----------------------------------------------------------------------.
+				| "Há relatos de que as aparições de monstros têm se intensificado durante a noite." |
+				'------------------------------------------------------------------------------------'
+
+				 .----------.
+				/ Pessoa #4: \-----------------------------------------------------.
+				| "É, e os bandidos tendem a ser atraídos por objetos brilhantes." |
+				'------------------------------------------------------------------'
+
+				 .----------.
+				/ Pessoa #5: \--------------------------------------------------------------------------------.
+				| "Ouvi dizer que nem todos os monstros são perigosos. Alguns, aparentemente, são amigáveis." |
+				'---------------------------------------------------------------------------------------------'
+
+				 .----------.
+				/ Pessoa #6: \------------------------------------------------------------.
+				| "O Festival só acontece a cada vinte anos, ele não pode ser cancelado!" |
+				'-------------------------------------------------------------------------'
+
+				 .----------.
+				/ Pessoa #7: \-------.
+				| "Malditos bardos." |
+				'--------------------'
+
+				Enquanto isso, você avaliava trabalhos que poderia fazer no caminho para Idgr... Ah, você já
+				pegou a ideia a essa altura. No mural haviam três panfletos (sim, daqueles com o número de
+				telefone destacáveis):
+
+							       .-------------------------.
+							       | TRABALHOS DESSA SEMANA: |
+							       '-------------------------'
+				    .---------------------.      .---------------------.       .---------------------.
+				    |          1          |      |          2          |       |          3          |
+				    |  Escoltar alguém e  |      |  Levar algo e talz  |       |  Matar algo e talz  |
+				    |        talz         |      |                     |       |                     |
+				    |                     |      |                     |       |                     |
+				    | Escoltar Sir Fulano |      | Procurar pelo       |       | Socorro!! Há um     |
+				    | até os estábulos de |      | mestre da filial da |       | monstro perigoso    |
+				    | Idebrigge.          |      | guilda na vila para |       | no caminho para     |
+				    | Caso aceite, chamar |      | receber maiores     |       | Idebrigge!!         |
+				    | por Sir Fulano no   |      | explicações.        |       |                     |
+				    | Hotel.              |      |                     |       |         - Moradores |
+				    | ------------------- |      | ------------------- |       | ------------------- |
+				    |          Recompensa |      |          Recompensa |       |          Recompensa |
+				    |                100G |      |                200G |       |                300G |
+				    '---------------------'      '---------------------'       '---------------------'
+
+
+										      .---------------.
+				Você gostaria de fazer algum dos trabalhos acima?     | 1 - Sim       |
+										      | 2 - Não       |
+										      | 3 - Tanto faz |
+										      '---------------'
+				Insira sua resposta: 
+
+# [se não:]
+									.---------.
+				Ok, tudo bem, mas tem certeza?		| 1 - Sim |
+									| 2 - Não |
+									'---------'
+# [se tanto faz:]
+				Você não tem escolha: você TEM que escolher.
+# [se sim:]
+				Qual você quer fazer?
+# [int 1, 2 ou 3.]
+
+# [se 1:]
+				Apesar do nome não te agradar, você arranca o papel do mural e vai até o hotel encontrar com
+				o cliente do trabalho: Sir Fulano. Você já ouviu falar dele. Toda a Cynder ouviu falar dele.
+				Na verdade... Todo o reino já ouviu falar dele porque, afinal... Não, não vou estragar a surpresa.
+				Na hora certa, você vai entender... Enfim, você vai até o hotel encontrar com ele e iniciar a
+				sua incrível jornada de um mago	qualquer viciado em jogos de azar.
+# [se 2:]
+				Você arranca o papel sem nenhuma empolgação e se encaminha até o balcão da taverna para falar
+				com a balconista, Ella, e pergunta como entrar em contato com o mestre da filial da guilda.
+
+					     .-----.
+					    / Ella: \-------------------------------------------.
+					    | "Ora, muito simples, ele fica atrás desta porta." |
+					    '---------------------------------------------------'
+
+				Ella se vira um pouco e aponta para uma porta atrás dela. Você a encara por um segundo e em
+				seguida olha para o balcão e volta a olhar para Ella.
+
+					      .-----.
+					     / Ella: \-----------------------------------------.
+					     | "Então... Você quer falar com o mestre ou não?" |
+					     '-------------------------------------------------'
+
+				Você salta por cima do balcão.
+# [Teste de acrobacia: fail se > 40]
+# [se fail]
+				Seu pé bate na quina do balcão e você cai miseravelmente, acertando a cara no chão. Ella te
+				olha com estranheza e provavelmente te julga como alguém estranho enquanto ela vagarosamente
+				abre a portinhola na lateral do balcão, como se quisesse te mostrar que o que você fez foi
+				estranho e impensado e que você não deveria ter feito aquilo. Por que você não pensou em agir
+				como um ser humano normal? Você se levanta mas sua vergonha se torna tanta que sua cabeça
+				pesa e você não consegue a manter erguida.
+
+				Você passa por Ella em vergonha e abre a porta nos fundos e entra no quarto.
+# [se ok]
+				Você, como o acrobata nato que você é, dá várias piruetas no ar antes de cair em pé. Ella te
+				olha com estranheza e provavelmente te julga como alguém estranho enquanto ela vagarosamente
+				abre a portinhola na lateral do balcão, como se quisesse te mostrar que o que você fez foi
+				estranho e desnecessário e que você não deveria ter feito aquilo. Por que você não pensou em
+				agir como um ser humano normal?
+
+				Mesmo assim, você abre a porta nos fundos e entra no quarto, tentando não manter contato
+				visual com Ella.
+# [se 3:]
+				Você sai da taverna e vai em direção à saída da vila, rumo à sua nova jornada como um mago
+				qualquer viciado em jogos de azar.
+

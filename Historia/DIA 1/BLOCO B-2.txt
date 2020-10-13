@@ -1,9 +1,135 @@
-[se 2:] você pega o papel e fala com o balconista Ella e pergunta como entrar em contato com o mestre da filial
-        da guilda (ela te faz pular o balcao e você faz um teste de acrobacia)[se > 40 você falha e cai e ela
-        abre a portinha do balcao para voce passar]
-[Evento do bloco A]
-Você fala com o mestre da guilda e ele diz: "carambath! Vocêth nãoth veioth sóth peloth dinheiroth!"
-[recompensa aumentada para 500G!! 500G, dude!! Porque havera um festival em Idebrigge]
-[item é algo muito importante para o festival]
-Você pega o item e vai.
-[4 narrações ocorrem no decorrer do dia]
+
+				Você entra no misterioso e lendário hall do mestre da filial da guilda de caçadores de
+				recompensa de Cynder, um lugar onde nenhum outro aventureiro pisou, exceto todos os
+				outros que vieram antes de você. Você ouviu muitas lendas sobre o local, muitas lendas
+				sobre os grandes membros do alto conselho da filial de Cynder da guilda de caçadores
+				de recompensas.
+
+				Procedentes dos pontos mais distantes do universo, encontram-se no grande hall da
+				filial da guilda, as forças mais poderosas jamais reunidas: Adolph Ashburnt, Bruce
+				Bigwits e Dick Lightfeet, Diana Flameheart, Arthur Goldfish, e os gemeos, Ulric
+				e Agnes Goodwill, junto do seu fiel macaco, Coxinha. Juntos, eles lutam pela justica
+				e paz para o reino de Idebrigge. Exceto que todos eles já morreram, menos Adolph,
+				o atual líder.
+
+				Você vê uma mesinha de madeira, redonda, com cerca de cinquenta centimentro de diâmetro
+				no centro da sala com duas cadeiras com a madeira bem podre em volta. Em uma delas, há
+				um velho sentado, com a cabeça enfiada no cotovelo, curvado sobre a mesa, segurando
+				firmemente um canecão vazio, como se aquela fosse sua única posse. Atrás dele, você vê
+				um armário pequeno de madeira, com gavetas abertas e vários papéis saindo delas. Também
+				há muitos papéis por todo o chão e algumas pilhas de papéis em volta da mesa.
+
+				Pelo fedor do local, você tem certeza de que o velho está morto há pelo menos duas
+				semanas.
+									.---------------------------------------.
+				Você então tem que tomar uma decisão:	| 1 - Conjurar uma magia                |
+									| 2 - Sair daqui e pegar outra missão   |
+									| 3 - Perguntar para Ella sobre o velho |
+									'---------------------------------------'
+
+				Sua resposta: 
+[se 2 ou 3]
+				Você se vira e pensa em sair da sala, mas ao se deparar com Ella te encarando,
+				você se lembra da sua vergonha anterior e então fecha e se escora na porta.
+
+				Você percebe que não vai ter outro jeito, então...
+[se 1]
+								.----------.
+				Você decide conjurar uma magia: | 1 - Fogo |
+								| 2 - Gelo |
+								| 3 - Cura |
+								'----------'
+				Sua resposta: 
+[se 1]
+				Você conjura uma magia de fogo no velho.
+
+				Ele rapidamente pega fogo por causa da pele seca e velha. Ele acorda desesperado e
+				começa a correr em círculos pela sala, gritando por ajuda. Ella entra no quarto e, ao
+				se deparar com a cena, vai até o balcão, pega um balde em baixo dele, o enche de água
+				e joga no velho.
+
+				 .-------.
+				/ Adolph: \------------------------------------------------------------.
+				| "Qual éth o seu problemath!? Por acaso estáth tentandoth me matarth? |
+				| Não sabesth que em uma pele seca e velha como a minha, fogo podeth   |
+				| serth mortal!?"                                                      |
+				'----------------------------------------------------------------------'
+
+				Você pede desculpas e explica que quer aceitar o trabalho de levar algo para a cidade.
+				
+				 .-------.
+				/ Adolph: \-----------------------------------------------------------------.
+				| "Ah sim... Este éth um trabalho deveras importante!!! Não tenhoth certeza |
+				| de que você éth capaz de cumpríth-lo, a julgarth pela sua falta de        |
+				| proficiência e conhecimento sobre suas próprias magias. Ireith aumentar a |
+				| recompensa para 600G! Desta forma, se falharesth, não demoraráth para que |
+				| outro aventureiro resgateth o objeto! Hahaha! Ella, por favor, pegueth a  |
+				| "coisa" para mim, por gentileza, minha querida."                          |
+				'---------------------------------------------------------------------------'
+[se 2]
+				Você conjura uma magia de gelo no velho.
+
+				O frio faz ele acordar rapidamente. Tremendo e assustado, ele tenta chamar por ajuda,
+				mas ele está com muito frio para sequer falar. Você explica que quer conversar sobre
+				a missão no mural e apresenta o papel para ele. Vendo que ele não consegue falar
+				devido ao frio, você decide conjurar uma magia de fogo em volta dele para o aquecer.
+
+				 .-------.
+				/ Adolph: \------------------------------------------------------------------------.
+				| "Ah, bem melhor. Muito obrigadoth, meu jovemth. Mas vocêth poderiath terth       |
+				| simplesmente me cutucadoth. Sou um velhoth, não um mortoth-vivoth."              |
+				'----------------------------------------------------------------------------------'
+
+				 .-------.
+				/ Adolph: \------------------------------------------------------------.
+				| "Vejamoth aqui... Ah sim, essa entrega éth muito importante... Ella! |
+				| Ella venhath até aqui! Precisoth que pegueth a "coisa" para mim!"    |
+				'----------------------------------------------------------------------'
+
+				Ella entra no quarto, vai até o armário no fundo do mesmo e abre uma das gavetas.
+[se 3]
+				Você conjura uma magia de cura no velho.
+
+				Por ele ser quase um morto-vivo, ele toma dano e morre.
+
+				Ella escuta os últimos gritos de agonia do velho e entra na sala. Se deparando com a
+				a cena, ela estapeia a própŕia testa:
+
+				 .-----.
+				/ Ella: \----------------------------------------.
+				| "Você tentou usar uma magia de cura, não foi?" |
+				'------------------------------------------------'
+
+				Sem saber onde enfiar sua cara, você vagarosamente balança a cabeça afirmativamente.
+				Ella respira fundo e aperta a testa com os dedos.
+
+				 .-----.
+				/ Ella: \--------------------------------------------------------------------.
+				| "Bom, acho que isso faz de mim a nova líder da filial... O que voce queria |
+				| com o velho afinal?"                                                       |
+				'----------------------------------------------------------------------------'
+
+				Você mostra o papel da missão para levar o objeto.
+
+				 .-----.
+				/ Ella: \---------------------------------------------------.
+				| "Ah, essa coisa? Na verdade, eu quem postei esse pedido." |
+				'-----------------------------------------------------------'
+
+				Ella caminha até o armário no fundo do quarto e abre uma das gavetas.
+
+[volta]
+				 .-----.
+				/ Ella: \-------------------------------------------------------------------------------.
+				| "Você só tem que levar essa jóia até Idebrigge. É para o Festival da Mariposa Sagrada |
+				| Com Cabeça de Dragão da Lua Cor-de-Rosa Flamejante. É uma jóia importante para o      |
+				| Festival. Minha família é responsável por guardar essa jóia por gerações, então tome  |
+				| bastante cuidado! Ela aguenta alguns arranhões, mas o excesso de dano com certeza vai |
+				| quebrá-la."                                                                           |
+				'---------------------------------------------------------------------------------------'
+
+				Você pega a jóia, o coloca em sua bolsa e, confiante, sai da vila. Começa assim a sua
+				incrível jornada de um mago qualquer viciado em jogos de azar.
+[4 narrações ocorrem no decorrer do dia
+
+
