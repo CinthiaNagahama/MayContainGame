@@ -7,7 +7,8 @@ typedef struct carta {
     char elemento_carta[5]; // elemento da carta, para o cálculo de dano
     float multiplicador_carta; // valor do multiplicador para o cálculo de dano
     char efeito[8]; // tipo da carta, usado para definir ação no combate
-    char descricao[151]; // descrição da carta, para display
+    char descricao[151]; // descrição da carta, para 
+    char path[35]; // caminho da textura
 } Carta; // estrutura da carta
 
 typedef struct databasecarta{
@@ -21,7 +22,18 @@ typedef struct elemento{
     struct elemento* prox;
 } Elem;
 
-typedef struct deck Deck; // ponteiro de fila estática para o Deck
+struct fila_deck {
+    int qtd;
+    Elem* inicio;
+    Elem* final;
+}; // estrutura da fila (Deck)
+
+struct mao {
+    Carta info[5];
+    int qtd_cartas;
+}; // estrutura da lista (Mao)
+
+typedef struct fila_deck Deck; // ponteiro de fila estática para o Deck
 typedef struct mao Mao; // ponteiro de lista estática para a Mao
 
 DatabaseCarta* carta_db; // variável global que será usada como database das cartas
@@ -52,6 +64,9 @@ int remove_deck(Deck* fi);
 
 // consulta o valor da primeira carta no deck e o salva por referência
 int consulta_deck(Deck* fi, int *idcarta);
+
+// retorna quantidade de cartas no deck
+int qtd_deck(Deck* fi);
 
 // prepara e embaralha o deck a primeira vez na luta
 int inicializa_deck(Deck* fi);
@@ -86,6 +101,9 @@ int insere_mao(Mao* mi, int idcarta);
 
 // consulta a carta de índice = index da mão
 int consulta_mao(Mao* mi, int index, int *idconsulta);
+
+// retorna quantidade de cartas na mao
+int qtd_mao(Mao* mi);
 
 // adiciona carta à mão e remove do deck
 int compra_carta(Deck* f1, Mao* m1);
