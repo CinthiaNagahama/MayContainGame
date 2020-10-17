@@ -384,7 +384,7 @@ int descarta_carta(Mao* mi, int index){
         return 0;
     if(mao_vazia(mi))
         return 0;
-    int i;
+    int i = index;
     if(index != 4){                                          // se índice nao for 4,
         for(i = index; i < mi->qtd_cartas - 1; i++)          // reorganiza a mao
             mi->info[i] = mi->info[i + 1];
@@ -431,11 +431,9 @@ int compra_carta(Deck* f1, Mao* m1){
     if (f1 == NULL || m1 == NULL)
         return -1;
     if (deck_vazio(f1)){
-        printf("Seu deck está vazio!\n");
         return 0;
     }
     if (mao_cheia(m1)){
-        printf("Sua mão está cheia!\n");
         return 0;
     }
     int x, carta;

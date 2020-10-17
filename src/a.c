@@ -5,68 +5,40 @@
 #include <string.h>
 #include "../Deck/deck.h"
 #include <time.h>
+#include "../Inimigo.h"
 
 const int SCR_WID = 1280;
 const int SCR_HEI = 750;
 
 typedef struct player{
     int hp;
+    int hpmax;
     int atk;
     int def;
+    int turno;
+    int gameOver;
 } Player;
 
-typedef struct inimigo{
-    char nome[11];
-    int hp;
-} Inimigo;
+typedef struct seletor{
+    int ativoc;
+    int ativoe;
+    int indexc;
+    int indexe;
+    int escudo;
+    int prev;
+    int tutorial;
+    int animation;
+} Seletor;
 
-typedef struct sprite_inimigo{
-    char path[35];
-    int w;
-    int h;
-} SpriteInimigo;
+typedef struct animation{
+    int alpha;
+    int r;
+    int g;
+    int b;
+    SDL_Rect clip;
+    SDL_Rect size;
+} Animation;
 
-enum LButtonSprite{
-    BUTTON_MOUSE_OUT,
-    BUTTON_MOUSE_OVER,
-    BUTTON_MOUSE_DOWN,
-    BUTTON_MOUSE_UP,
-    BUTTON_TOTAL
-};
-
-enum KeyPressSurfaces{
-    KEY_PRESS_SURFACE_DEFAULT,
-    KEY_PRESS_SURFACE_UP,
-    KEY_PRESS_SURFACE_DOWN,
-    KEY_PRESS_SURFACE_LEFT,
-    KEY_PRESS_SURFACE_RIGHT,
-    KEY_PRESS_SURFACE_ACCEPT,
-    KEY_PRESS_SURFACE_BACK,
-    KEY_PRESS_SURFACE_TOTAL
-};
-
-enum Inimigos{
-    PINGUIM,
-    PINGUIM_BOLADO,
-    GOBLIN,
-    LADRAO,
-    ABU,
-    INIMIGO_TOTAL
-};
-
-SpriteInimigo gInimigoPath[5];
-int loadPaths(){
-    strcpy(gInimigoPath[0].path, "Sprites/Inimigos/gumball1.png");
-    gInimigoPath[0].w = 200;
-    gInimigoPath[0].h = 234;
-    strcpy(gInimigoPath[1].path, "Sprites/Inimigos/gumball2.png");
-    gInimigoPath[1].w = 200;
-    gInimigoPath[1].h = 234;
-    strcpy(gInimigoPath[2].path, "Sprites/Inimigos/Goblin.png");
-    strcpy(gInimigoPath[3].path, "Sprites/Inimigos/Ladrao.png");
-    strcpy(gInimigoPath[4].path, "Sprites/Inimigos/Abu.png");
-    return 1;
-}
 // window
 SDL_Window *gWindow = NULL;
 // window surface
@@ -80,12 +52,37 @@ SDL_Texture *gTexture = NULL;
 SDL_Texture *gBGTexture = NULL;
 SDL_Texture **gEnemyTexture = NULL;
 SDL_Texture *gBoxTexture = NULL;
+SDL_Texture *gNameBoxTexture = NULL;
+SDL_Texture *gMenuBoxTexture = NULL;
+SDL_Texture *gBattleBoxTexture = NULL;
+SDL_Texture **gIconTexture = NULL;
 SDL_Texture **gCardTexture = NULL;
 SDL_Texture *gModTexture = NULL;
+SDL_Texture *gExpressionBoxTexture = NULL;
 // Fonte
 TTF_Font *gFont = NULL;
 // rendered texture
 SDL_Texture *gFontTexture = NULL;;
+// Viewports
+    const SDL_Rect battleBGVP = {0, 0, SCR_WID, 3 * SCR_HEI / 4};
+    const SDL_Rect menuVP = {0, 3 * SCR_HEI / 4, SCR_WID, SCR_HEI/4};
+    const SDL_Rect statsVP = {0, 3 * SCR_HEI / 4, SCR_WID/6, SCR_HEI/4};
+    const SDL_Rect stockVP = {SCR_WID / 6 + 35, 3 * SCR_HEI / 4, 5 * SCR_WID/6 - 10, SCR_HEI/4};
+    const SDL_Rect enemyAreaVP = {120, 30, 1040, 3 * SCR_HEI / 4 - 30};
+    const SDL_Rect msgAreaTopVP = {190, 30, 900, 160};
+    const SDL_Rect msgAreaBottomVP = {190, 570, 900, 160};
+// Cores
+    const SDL_Color color = {200,200,200};
+    const SDL_Color black = {0,0,0};
+    const SDL_Color blue = {20,20,204};
+    const SDL_Color green = {0,128,0};
+    const SDL_Color red = {204,0,0};
+    const SDL_Color yellow = {204,204,0};
+
+enum ICON_NUM {
+    SHIELD_ICON,
+    PREV_ICON
+};
 
 int init(){
     int success = 1;
@@ -121,7 +118,6 @@ int init(){
                     success = 0;
                 }
                 srand(time(0));
-                gEnemyTexture = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * 3);
             }
         }
     }
@@ -203,8 +199,23 @@ int loadMediaBasic(){
         printf("BGTexture fail. \n");
         success = 0;
     }
-    gBoxTexture = loadTexture("Sprites/Misc/textbox1.png");
+    gBattleBoxTexture = loadTexture("Sprites/Misc/textbox1.png");
+    if(gBattleBoxTexture == NULL){
+        printf("BoxTexture fail. \n");
+        success = 0;
+    }
+    gBoxTexture = loadTexture("Sprites/Misc/textbox2.png");
     if(gBoxTexture == NULL){
+        printf("BoxTexture fail. \n");
+        success = 0;
+    }
+    gNameBoxTexture = loadTexture("Sprites/Misc/namebox2.png");
+    if(gNameBoxTexture == NULL){
+        printf("BoxTexture fail. \n");
+        success = 0;
+    }
+    gMenuBoxTexture = loadTexture("Sprites/Misc/menubox.png");
+    if(gMenuBoxTexture == NULL){
         printf("BoxTexture fail. \n");
         success = 0;
     }
@@ -221,26 +232,42 @@ int loadMediaBasic(){
         printf("Font fail. \n");
         success = 0;
     }
-    return success;
-}
-
-int loadMediaCurrent(int *enemy, int numeroInimigos)
-{
-    int success = 1, i;
-    // if(gEnemyTexture != NULL){
-    //     for(i = 0; i < 3; i++){
-    //         if(gEnemyTexture[i] != NULL)
-    //             SDL_DestroyTexture(gEnemyTexture[i]);
-    //     }
-    // }
-    for(i = 0; i <= numeroInimigos; i++){
-        gEnemyTexture[i] = loadTexture(gInimigoPath[enemy[i]].path);
+    gEnemyTexture = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * 5);
+    for(int i = 0; i < 5; i++){
+        gEnemyTexture[i] = loadTexture(inimigo_db[i].path);
         if(gEnemyTexture[i] == NULL){
             printf("EnemyTexture fail. \n");
             success = 0;
         }
     }
+    gIconTexture = (SDL_Texture**) malloc(sizeof(SDL_Texture*) * 2);
+    gIconTexture[SHIELD_ICON] = loadTexture("Sprites/Misc/escudo.png");
+    if(gIconTexture[SHIELD_ICON] == NULL){
+        printf("ShieldTexture fail. \n");
+        success = 0;
+    }
+    gIconTexture[PREV_ICON] = loadTexture("Sprites/Misc/prev.png");
+    if(gIconTexture[PREV_ICON] == NULL){
+        printf("PrevTexture fail. \n");
+        success = 0;
+    }
+    gExpressionBoxTexture = loadTexture("Sprites/Misc/twewy.png");
+    if(gExpressionBoxTexture == NULL){
+        printf("ExpresisonTexture fail. \n");
+        success = 0;
+    }
     return success;
+}
+
+void loadMediaCurrentTexture(char *path){
+    if(gModTexture != NULL){
+        SDL_DestroyTexture(gModTexture);
+        gModTexture = NULL;
+    }
+    gModTexture = loadTexture(path);
+    if(gModTexture == NULL){
+        printf("ModTexture fail\n");
+    }
 }
 
 void closeWindow(){
@@ -249,11 +276,27 @@ void closeWindow(){
     for(int i = 0; i < 16;i++){
         SDL_DestroyTexture(gCardTexture[i]);
     }
+    free(gCardTexture);
     gCardTexture = NULL;
-    SDL_DestroyTexture(gEnemyTexture);
+    for(int i = 0; i < 5; i++){
+        SDL_DestroyTexture(gEnemyTexture[i]);
+    }
+    free(gEnemyTexture);
     gEnemyTexture = NULL;
+    SDL_DestroyTexture(gIconTexture[PREV_ICON]);
+    SDL_DestroyTexture(gIconTexture[SHIELD_ICON]);
+    free(gIconTexture);
+    if(gModTexture != NULL){
+        SDL_DestroyTexture(gModTexture);
+        gModTexture = NULL;
+    }
+    gIconTexture = NULL;
     SDL_DestroyTexture(gBoxTexture);
     gBoxTexture = NULL;
+    SDL_DestroyTexture(gNameBoxTexture);
+    gNameBoxTexture = NULL;
+    SDL_DestroyTexture(gBattleBoxTexture);
+    gBattleBoxTexture = NULL;
     SDL_DestroyTexture(gBGTexture);
     gBGTexture = NULL;
     SDL_DestroyRenderer(gRenderer);
@@ -284,6 +327,54 @@ int mouseOver(SDL_Rect *button, SDL_Event *e){
         inside = 0;
     }
     return inside;
+}
+
+int mouseOverClickEnemy(SDL_Rect *button, SDL_Event *e){
+    int inside = 1, click = 0;
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    if(x < button->x + enemyAreaVP.x){
+        inside = 0;
+    }
+    else if(x > button->x + enemyAreaVP.x + button->w){
+        inside = 0;
+    }
+    else if(y < button->y + enemyAreaVP.y){
+        inside = 0;
+    }
+    else if(y >= button->y + enemyAreaVP.y + button->h + 40){
+        inside = 0;
+    }
+    if(inside){
+        if(e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT){
+            click = 1;
+        }
+    }
+    return click;
+}
+
+int mouseOverClickCard(SDL_Rect *button, SDL_Event *e){
+    int inside = 1, click = 0;
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    if(x < button->x + stockVP.x){
+        inside = 0;
+    }
+    else if(x > button->x + stockVP.x + button->w){
+        inside = 0;
+    }
+    else if(y < button->y + stockVP.y){
+        inside = 0;
+    }
+    else if(y >= button->y + stockVP.y + button->h + 40){
+        inside = 0;
+    }
+    if(inside){
+        if(e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT){
+            click = 1;
+        }
+    }
+    return click;
 }
 
 void itoa(char *string, int x){
@@ -319,23 +410,65 @@ void itoa(char *string, int x){
     }
 }
 
-void renderBattle(Player *player, SDL_Event *e, int *j, Deck **deck, Mao **mao, SDL_Rect *enemyVP, SDL_Rect *cardAreaVP, int* idinimigo, int numeroInimigos, Inimigo *enemy){
+void renderClear(){
+    SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+    SDL_RenderClear(gRenderer);
+}
+
+void renderMessageWrapped(char *msg, SDL_Rect *Viewport){
+    int i, lines = 1;
+    SDL_Rect msgArea;
+    msgArea.x = 19; msgArea.y = 19;
+    TTF_SizeUTF8(gFont, msg, &msgArea.w, &msgArea.h);
+    
+    if(msg[0] == '\0')
+        return;
+    
+    for (i = 0; i < strlen(msg); i++){
+        if(msg[i] == '\n')
+            lines++;
+    }
+    msgArea.h *= lines * 0.5;
+    msgArea.w *= lines * 0.5;
+    SDL_RenderSetViewport(gRenderer, Viewport);
+    loadMediaCurrentTexture("Sprites/Misc/textbox1.png");
+    SDL_SetTextureAlphaMod(gModTexture, 200);
+    SDL_RenderCopy(gRenderer, gModTexture, NULL, NULL);
+
+    renderTextWrapped(msg, black);
+    SDL_RenderCopy(gRenderer, gFontTexture, NULL, &msgArea);
+    msgArea.x -= 4; msgArea.y -= 4;
+    renderTextWrapped(msg, color);
+    SDL_RenderCopy(gRenderer, gFontTexture, NULL, &msgArea);
+    
+}
+
+void renderBattleMessage(char *msg, SDL_Rect *Viewport){
+    int i;
+    SDL_Rect msgArea;
+    msgArea.x = 25; msgArea.y = 19;
+    TTF_SizeUTF8(gFont, msg, &msgArea.w, &msgArea.h);
+
+    SDL_RenderSetViewport(gRenderer, Viewport);
+    SDL_SetTextureAlphaMod(gBattleBoxTexture, 200);
+    SDL_RenderCopy(gRenderer, gBattleBoxTexture, NULL, NULL);
+
+    renderText(msg, black);
+    SDL_RenderCopy(gRenderer, gFontTexture, NULL, &msgArea);
+    msgArea.x -= 4; msgArea.y -= 4;
+    renderText(msg, color);
+    SDL_RenderCopy(gRenderer, gFontTexture, NULL, &msgArea);
+}
+
+void renderBattle(Player *player, SDL_Event *e, Deck **deck, Mao **mao, SDL_Rect *enemyVP, SDL_Rect *cardAreaVP, InimigoBatalha* inimigos, int numeroInimigos, Seletor* select){
     int idcarta = 15, i = 0, x = 0, y = 0;
     char a[5];
-    const SDL_Rect battleBGVP = {0, 0, SCR_WID, 3 * SCR_HEI / 4};
-    const SDL_Rect menuVP = {0, 3 * SCR_HEI / 4, SCR_WID, SCR_HEI/4};
-    const SDL_Rect statsVP = {0, 3 * SCR_HEI / 4, SCR_WID/6, SCR_HEI/4};
-    const SDL_Rect stockVP = {SCR_WID / 6 + 35, 3 * SCR_HEI / 4, 5 * SCR_WID/6 - 10, SCR_HEI/4};
-    const SDL_Rect enemyAreaVP = {120, 30, 1040, 3 * SCR_HEI / 4 - 30};
     SDL_Rect cardText[5];
     SDL_Rect mousehover;
     SDL_Rect texthover;
-    SDL_Color color = {200,200,200};
-    SDL_Color black = {0,0,0};
 
     // limpa
-    SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
-    SDL_RenderClear(gRenderer);
+    renderClear();
     
     // Battle Background
     SDL_RenderSetViewport(gRenderer, &battleBGVP);
@@ -343,54 +476,64 @@ void renderBattle(Player *player, SDL_Event *e, int *j, Deck **deck, Mao **mao, 
 
     // Enemy Area
     SDL_RenderSetViewport(gRenderer, &enemyAreaVP);
-    SDL_SetTextureAlphaMod(gEnemyTexture, *j);
         
         // Inimigo
         for(i = 0; i <= numeroInimigos; i++){
-            if(mouseOver(&enemyVP[i], e))
-                enemyVP[i].y = 3*(3 * SCR_HEI / 4 - 30)/4 - enemyVP[i].h - 15;
-            else
-                enemyVP[i].y = 3*(3 * SCR_HEI / 4 - 30)/4 - enemyVP[i].h;
-            if(idinimigo[i] == 0){
-                SDL_Rect cutGB = {114, 15, gInimigoPath[0].w, gInimigoPath[0].h};
-                SDL_RenderCopy(gRenderer, gEnemyTexture[i], &cutGB, &enemyVP[i]);
-            }
-            else{
-                SDL_RenderCopy(gRenderer, gEnemyTexture[i], NULL, &enemyVP[i]);
+            if(!inimigos[i].derrotado){
+                if(numeroInimigos == 2 && i == 1){
+                    if(mouseOver(&enemyVP[i], e))
+                        enemyVP[i].y = 3*(3 * SCR_HEI / 4 - 30)/4 - enemyVP[i].h - 15;
+                    else
+                        enemyVP[i].y = 3*(3 * SCR_HEI / 4 - 30)/4 - enemyVP[i].h;
+                }
+                else{
+                    if(mouseOver(&enemyVP[i], e))
+                        enemyVP[i].y = 3*(3 * SCR_HEI / 4 - 30)/4 - enemyVP[i].h + 40;
+                    else
+                        enemyVP[i].y = 3*(3 * SCR_HEI / 4 - 30)/4 - enemyVP[i].h + 50;
+                }
+                SDL_SetTextureAlphaMod(gEnemyTexture[inimigos[i].id], inimigos[i].alpha);
+                SDL_RenderCopy(gRenderer, gEnemyTexture[inimigos[i].id], NULL, &enemyVP[i]);
             }
         }
 
-        // hover effect
-        for(i = 0; i <= numeroInimigos; i++){
-        if(mouseOver(&enemyVP[i], e)){
-            SDL_GetMouseState(&x, &y);
-            SDL_SetTextureAlphaMod(gBoxTexture, 0);
-            mousehover.h = 65;
-            mousehover.y = y - mousehover.h;
-            mousehover.w = 150;
-            if(x + mousehover.w >= 1280)
-                mousehover.x = x - mousehover.w;
-            else
-                mousehover.x = x;
-            texthover.x = 15;
-            texthover.y = 15;
-            TTF_SizeUTF8(gFont, enemy[i].nome, &(mousehover.w), &(mousehover.h));
-            mousehover.w += 30; mousehover.h += 30;
-            SDL_RenderSetViewport(gRenderer, &mousehover);
-            SDL_RenderCopy(gRenderer, gBoxTexture, NULL, NULL);
-            TTF_SizeUTF8(gFont, enemy[i].nome, &(texthover.w), &(texthover.h));
-            renderText(enemy[i].nome, color);
-            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
+        // hover box
+        if(!select->ativoe){
+            for(i = 0; i <= numeroInimigos; i++){
+                if(!inimigos[i].derrotado){
+                    if(mouseOver(&enemyVP[i], e)){
+                        SDL_GetMouseState(&x, &y);
+                        SDL_SetTextureAlphaMod(gBattleBoxTexture, 200);
+                        mousehover.h = 65;
+                        mousehover.y = y - mousehover.h;
+                        mousehover.w = 150;
+                        if(x + mousehover.w >= 1280)
+                            mousehover.x = x - mousehover.w;
+                        else
+                            mousehover.x = x;
+                        texthover.x = 19; texthover.y = 19;
+                        TTF_SizeUTF8(gFont, inimigo_db[inimigos[i].id].nome, &(mousehover.w), &(mousehover.h));
+                        mousehover.w += 30; mousehover.h += 30;
+                        SDL_RenderSetViewport(gRenderer, &mousehover);
+                        SDL_RenderCopy(gRenderer, gBattleBoxTexture, NULL, NULL);
+                        TTF_SizeUTF8(gFont, inimigo_db[inimigos[i].id].nome, &(texthover.w), &(texthover.h));
+                        renderText(inimigo_db[inimigos[i].id].nome, black);
+                        SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
+                        texthover.x -= 4; texthover.y -= 4;
+                        renderText(inimigo_db[inimigos[i].id].nome, color);
+                        SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
+                    }
+                }
+            }
         }
-    }
 
     // Menu
     SDL_RenderSetViewport(gRenderer, &menuVP);
-    SDL_RenderCopy(gRenderer, gBoxTexture, NULL, NULL);
+    SDL_SetTextureAlphaMod(gMenuBoxTexture, 255);
+    SDL_RenderCopy(gRenderer, gMenuBoxTexture, NULL, NULL);
 
         // Stats
         SDL_RenderSetViewport(gRenderer, &statsVP);
-        SDL_RenderCopy(gRenderer, gBoxTexture, NULL, NULL);
                   
             // barra CR
             SDL_Rect aux = {80, 55, 10, 28};
@@ -458,11 +601,24 @@ void renderBattle(Player *player, SDL_Event *e, int *j, Deck **deck, Mao **mao, 
             renderText("CR", color);
             SDL_RenderCopy(gRenderer, gFontTexture, NULL, &deckInfo);
 
-    gCurrentSurface = SDL_GetWindowSurface(gWindow);
+            // SHIELD
+            if(select->escudo){
+                SDL_Rect escudoArea = { 20, 130, 48, 48};
+                SDL_RenderCopy(gRenderer, gIconTexture[SHIELD_ICON], NULL, &escudoArea);
+            }
+
+            // PREV
+            if(select->prev){
+                SDL_Rect prevArea = { 75, 130, 48, 48};
+                SDL_RenderCopy(gRenderer, gIconTexture[PREV_ICON], NULL, &prevArea);
+            }
+
     // Cartas
     SDL_RenderSetViewport(gRenderer, &stockVP);
     for (i = 0; i < qtd_mao(*mao); i++){
-        if(mouseOver(&(cardAreaVP[i]), e))
+        if(mouseOver(&(cardAreaVP[i]), e) && !select->ativoc)
+            cardAreaVP[i].y = 0;
+        else if(select->ativoc & i == select->indexc)
             cardAreaVP[i].y = 0;
         else
             cardAreaVP[i].y = 15;
@@ -471,53 +627,59 @@ void renderBattle(Player *player, SDL_Event *e, int *j, Deck **deck, Mao **mao, 
         cardText[i].w = cardAreaVP[i].w - 20;
         cardText[i].h = 20;
         consulta_mao(*mao, i, &idcarta);
-        SDL_RenderCopy(gRenderer, gCardTexture[idcarta], NULL, &cardAreaVP[i]);
+        if(select->ativoc && i == select->indexc){
+            loadMediaCurrentTexture(carta_db[idcarta].carta_info.path);
+            SDL_SetTextureColorMod(gModTexture, 200, 200, 0);
+            SDL_RenderCopy(gRenderer, gModTexture, NULL, &cardAreaVP[i]);
+        }
+        else
+            SDL_RenderCopy(gRenderer, gCardTexture[idcarta], NULL, &cardAreaVP[i]);
+
         renderText(carta_db[idcarta].carta_info.nome_carta, color);
         SDL_RenderCopy(gRenderer, gFontTexture, NULL, &cardText[i]);
     }
 
     // mouse hover effect
-    for (i = 0; i < qtd_mao(*mao); i++){
-        if(mouseOver(&cardAreaVP[i], e)){
-            SDL_GetMouseState(&x, &y);
-            SDL_SetTextureAlphaMod(gBoxTexture, 10);
-            mousehover.h = 170;
-            mousehover.y = y - mousehover.h;
-            mousehover.w = 400;
-            if(x + mousehover.w >= 1280)
-                mousehover.x = x - mousehover.w;
-            else
-                mousehover.x = x;
-            texthover.x = 19; texthover.y = 19;
-            consulta_mao(*mao, i, &idcarta);
-            SDL_RenderSetViewport(gRenderer, &mousehover);
-            SDL_RenderCopy(gRenderer, gBoxTexture, NULL, NULL);
-            TTF_SizeUTF8(gFont, carta_db[idcarta].carta_info.nome_carta, &(texthover.w), &(texthover.h));
-            renderText(carta_db[idcarta].carta_info.nome_carta, black);
-            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
-            texthover.x -= 4; texthover.y -= 4;
-            renderText(carta_db[idcarta].carta_info.nome_carta, color);
-            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
-            texthover.x += 4; texthover.y += texthover.h + 4;
-            TTF_SizeUTF8(gFont, carta_db[idcarta].carta_info.elemento_carta, &(texthover.w), &(texthover.h));
-            renderText(carta_db[idcarta].carta_info.elemento_carta, black);
-            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
-            texthover.x -= 4; texthover.y -= 4;
-            renderText(carta_db[idcarta].carta_info.elemento_carta, color);
-            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
-            texthover.x += 4; texthover.y += texthover.h + 4;
-            texthover.w = mousehover.w - 30;
-            texthover.h *= 2;
-            renderTextWrapped(carta_db[idcarta].carta_info.descricao, black);
-            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
-            texthover.x -= 4; texthover.y -= 4;
-            renderTextWrapped(carta_db[idcarta].carta_info.descricao, color);
-            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
+    if(!select->ativoc){
+        for (i = 0; i < qtd_mao(*mao); i++){
+            if(mouseOver(&cardAreaVP[i], e)){
+                SDL_GetMouseState(&x, &y);
+                SDL_SetTextureAlphaMod(gBattleBoxTexture, 200);
+                mousehover.h = 170;
+                mousehover.y = y - mousehover.h;
+                mousehover.w = 400;
+                if(x + mousehover.w >= 1280)
+                    mousehover.x = x - mousehover.w;
+                else
+                    mousehover.x = x;
+                texthover.x = 19; texthover.y = 19;
+                consulta_mao(*mao, i, &idcarta);
+                SDL_RenderSetViewport(gRenderer, &mousehover);
+                SDL_RenderCopy(gRenderer, gBattleBoxTexture, NULL, NULL);
+                TTF_SizeUTF8(gFont, carta_db[idcarta].carta_info.nome_carta, &(texthover.w), &(texthover.h));
+                renderText(carta_db[idcarta].carta_info.nome_carta, black);
+                SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
+                texthover.x -= 4; texthover.y -= 4;
+                renderText(carta_db[idcarta].carta_info.nome_carta, color);
+                SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
+                texthover.x += 4; texthover.y += texthover.h + 4;
+                TTF_SizeUTF8(gFont, carta_db[idcarta].carta_info.elemento_carta, &(texthover.w), &(texthover.h));
+                renderText(carta_db[idcarta].carta_info.elemento_carta, black);
+                SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
+                texthover.x -= 4; texthover.y -= 4;
+                renderText(carta_db[idcarta].carta_info.elemento_carta, color);
+                SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
+                texthover.x += 4; texthover.y += texthover.h + 4;
+                texthover.w = mousehover.w - 30;
+                texthover.h *= 2;
+                renderTextWrapped(carta_db[idcarta].carta_info.descricao, black);
+                SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
+                texthover.x -= 4; texthover.y -= 4;
+                renderTextWrapped(carta_db[idcarta].carta_info.descricao, color);
+                SDL_RenderCopy(gRenderer, gFontTexture, NULL, &texthover);
+            }
         }
     }
-    
-    SDL_RenderPresent(gRenderer);
-    if(*j < 254) *j+=2;
 }
 
 void battleInit(Deck **fi, Mao **li){
@@ -533,37 +695,44 @@ void battleEnd(Deck **fi, Mao **li){
 }
 
 int battleOn(Player *player, SDL_Event *e, int *quit){
-    int idcarta, battle = 1, idinimigo[3], i, numeroInimigos;
-    int width;
-    int escudo = 0, prev = 0, escudoCount = 0, prevCount = 0, primeiroTurno = 1;
+    int idcarta, battle = 1, idinimigo[3], numeroInimigos;
+    int width, x, y, dano = 0, k, i, critical = 0,  roll;
+    int escudoCount = 0, prevCount = 0, primeiroTurno = 1, pause = 1;
+    double fatorAleatorio;
+    char msg[100];
     Deck *deck = NULL;
     Mao *mao = NULL;
+    InimigoBatalha *inimigos = NULL;
+    Animation animate = {0, {0,0,0,0}, {0,0,0,0}};
+    Seletor select = {1, 1, -1, -1, 0, 0};
+    SDL_Rect numeroSize;
+
     battleInit(&deck, &mao);
+    player->turno = 1;
 
-    // alterar com o db de inimigo
-    Inimigo enemy[3];
-    strcpy(enemy[0].nome, "Gumball");
-    strcpy(enemy[1].nome, "GB_Susto");
-    strcpy(enemy[2].nome, "what");
-    enemy[0].hp = 200;
-    enemy[1].hp = 100;
-    enemy[2].hp = 150;
-
+    // GERADOR INIMIGOS
     numeroInimigos = rand() % 3;
-    for(i = 0; i <= numeroInimigos; i++)
-        idinimigo[i] = rand() % 2;
-    
-    if(!loadMediaCurrent(&idinimigo, numeroInimigos)){
-        printf("load2 failed.\n");
-        return -1;
+    inimigos = (InimigoBatalha*) malloc(sizeof(InimigoBatalha) * (numeroInimigos + 1));
+    for(i = 0; i <= numeroInimigos; i++){
+        inimigos[i].id = rand() % 5;
+        inimigos[i].hp = inimigo_db[inimigos[i].id].HP;
+        inimigos[i].buff = 0;
+        inimigos[i].buffCount = 0;
+        inimigos[i].bolado = 0;
+        inimigos[i].turno = 0;
+        inimigos[i].derrotado = 0;
+        inimigos[i].alpha = 0;
     }
     width = 1040 / (numeroInimigos + 2);
     SDL_Rect enemyVP[3];
     for(i = 0;i <= numeroInimigos; i++){
-        enemyVP[i].w = gInimigoPath[idinimigo[i]].w;
-        enemyVP[i].h = gInimigoPath[idinimigo[i]].h;
+        enemyVP[i].w = inimigo_db[inimigos[i].id].w;
+        enemyVP[i].h = inimigo_db[inimigos[i].id].h;
         enemyVP[i].x = (width * (i + 1) - enemyVP[i].w / 2);
-        enemyVP[i].y = 3*(3 * SCR_HEI / 4 - 30)/4 - enemyVP[i].h;
+        if(numeroInimigos == 2 && i == 1)
+            enemyVP[i].y = 3*(3 * SCR_HEI / 4 - 30)/4 - enemyVP[i].h;    
+        else
+            enemyVP[i].y = 3*(3 * SCR_HEI / 4 - 30)/4 - enemyVP[i].h + 50;
     }
     SDL_Rect cardAreaVP[5];
     for(i = 0; i < 5;i++){
@@ -572,8 +741,7 @@ int battleOn(Player *player, SDL_Event *e, int *quit){
         cardAreaVP[i].w = 213 - 30;
         cardAreaVP[i].h = SCR_HEI/4 - 35;
     }
-    int j = 0;
-    int dano = 0;
+
     while(battle){
         while(SDL_PollEvent(e) != 0){
             if(e->type == SDL_QUIT){
@@ -589,76 +757,687 @@ int battleOn(Player *player, SDL_Event *e, int *quit){
                     battle = 0;
                     break;
                 }
+                if(!battle)
+                    break;
             }
         }
-        renderBattle(player, e, &j, &deck, &mao, &enemyVP, &cardAreaVP, &idinimigo, numeroInimigos, &enemy);
+        if(!battle)
+            break;
+
+        
         if(primeiroTurno){
+            // Animacao monstros surgindo
+            renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+            SDL_RenderPresent(gRenderer);
+            while(inimigos[0].alpha < 254){
+                for(i = 0; i <= numeroInimigos;i++)
+                    inimigos[i].alpha += 2;
+                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                SDL_RenderPresent(gRenderer);
+            }
+
+            // Mensagem #1: Quem apareceu?
+            renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+            strcpy(msg, inimigo_db[inimigos[0].id].nome);
+            for(i = 1; i <= numeroInimigos; i++){
+                if(i == numeroInimigos)
+                    strcat(msg, " e ");
+                else
+                    strcat(msg, ", ");
+                strcat(msg, inimigo_db[inimigos[i].id].nome);
+            }
+            if(numeroInimigos == 0)
+                strcat(msg, " apareceu!");
+            else
+                strcat(msg, " apareceram!");
+            renderBattleMessage(msg, &msgAreaTopVP);
+            SDL_RenderPresent(gRenderer);
+            while(pause){
+                SDL_WaitEvent(e);
+                if(e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT)
+                    break;
+            }
+
+            // Compra cartas iniciais
             for(i = 0; i < 5; i++){
                 compra_carta(deck, mao);
+                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                SDL_RenderPresent(gRenderer);
                 SDL_Delay(50);
-                renderBattle(player, e, &j, &deck, &mao, &enemyVP, &cardAreaVP, &idinimigo, numeroInimigos, &enemy);
             }
+
+            // Mensagem #2: Inicio da batalha
+            strcpy(msg, "É hora do duelo!");
+            renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+            renderBattleMessage(msg, &msgAreaTopVP);
+            SDL_RenderPresent(gRenderer);
+            while(pause){
+                SDL_WaitEvent(e);
+                if(e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT)
+                    break;
+            }
+
             primeiroTurno = 0;
         }
         // else if(deck_vazio(deck)){
 
         // }
+        // Compra carta a cada rodada
         else if(!mao_cheia(mao)){
             compra_carta(deck, mao);
+            renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+            SDL_RenderPresent(gRenderer);
+            SDL_Delay(50);
         }
-        SDL_WaitEvent(e);
-        if(e->type == SDL_QUIT){
-            battle = 0;
-            *quit = 1;
+
+        // Mensagem #3: Turno do jogador
+        player->turno = 1;
+        strcpy(msg, "Sua vez!");
+        renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+        renderBattleMessage(msg, &msgAreaTopVP);
+        SDL_RenderPresent(gRenderer);
+        select.ativoc = 0;
+        select.ativoe = 0;
+        while(pause){
+            SDL_WaitEvent(e);
+            if(e->type == SDL_MOUSEBUTTONDOWN)
+                break;
         }
-        else if(e->type == SDL_KEYDOWN){
-                switch(e->key.keysym.sym){
-                    case SDLK_ESCAPE:
-                    battle = 0; *quit = 1;
-                    break;
-                    case SDLK_RETURN:
+
+        // Turno do jogador
+        while(player->turno){
+            renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+            SDL_RenderPresent(gRenderer);
+            while(SDL_PollEvent(e) != 0){
+                if(e->type == SDL_QUIT){
                     battle = 0;
+                    *quit = 1;
+                    player->turno = 0;
+                }
+                else if(e->type == SDL_KEYDOWN){
+                        switch(e->key.keysym.sym){
+                            case SDLK_ESCAPE:
+                            battle = 0; *quit = 1; player->turno = 0;
+                            break;
+                            case SDLK_RETURN:
+                            battle = 0;
+                            break;
+                        }
+                        if(!battle)
+                            break;
+                    }
+                else if(e->type == SDL_MOUSEBUTTONDOWN){
+                    int t;
+                    for(i = 0; i < qtd_mao(mao); i++){
+                        if(mouseOverClickCard(&cardAreaVP[i], e)){
+                            select.indexc = i;
+                            consulta_mao(mao, select.indexc, &idcarta);
+                            if(strcmp(carta_db[idcarta].carta_info.efeito, "Ataque") == 0){
+                                select.ativoc = 1;
+                                while(select.ativoc){
+                                    renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                    SDL_RenderPresent(gRenderer);
+                                    while(SDL_PollEvent(e) != 0){
+                                        if(e->type == SDL_QUIT){
+                                            battle = 0;
+                                            *quit = 1;
+                                            select.ativoc = 0;
+                                            select.indexc = -1;
+                                            player->turno = 0;
+                                        }
+                                        else if(e->type == SDL_KEYDOWN){
+                                                switch(e->key.keysym.sym){
+                                                    case SDLK_ESCAPE:
+                                                    battle = 0; *quit = 1; player->turno = 0;
+                                                    break;
+                                                    case SDLK_RETURN:
+                                                    battle = 0;
+                                                    break;
+                                                }
+                                                if(!battle)
+                                                    break;
+                                        }
+                                        else if(e->type == SDL_MOUSEBUTTONDOWN){
+                                            if(e->button.button == SDL_BUTTON_RIGHT){
+                                                select.ativoc = 0;
+                                                select.indexc = -1;
+                                                break;
+                                            }
+                                            for(k = 0; k <= numeroInimigos; k++){
+                                                if(!inimigos[k].derrotado){
+                                                    if(mouseOverClickEnemy(&enemyVP[k], e)){
+                                                        select.indexe = k;
+                                                        select.ativoe = 1;
+                                                        renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                                        SDL_RenderPresent(gRenderer);
+
+                                                        // Calculo de dano
+                                                        fatorAleatorio = ((rand() % 101) + 50.0) / 100.0;
+                                                        dano = fatorAleatorio * player->atk * carta_db[idcarta].carta_info.multiplicador_carta;
+                                                        if(fatorAleatorio == 1.5)
+                                                            critical = 1;
+                                                        if(strcmp(carta_db[idcarta].carta_info.elemento_carta, "Fogo") == 0)
+                                                            dano = dano * inimigo_db[inimigos[select.indexe].id].RElemento[0];
+                                                        else if(strcmp(carta_db[idcarta].carta_info.elemento_carta, "Gelo") == 0)
+                                                            dano = dano * inimigo_db[inimigos[select.indexe].id].RElemento[1];
+                                                        else if(strcmp(carta_db[idcarta].carta_info.elemento_carta, "Elec") == 0)
+                                                            dano = dano * inimigo_db[inimigos[select.indexe].id].RElemento[2];
+                                                        dano -= inimigo_db[inimigos[select.indexe].id].DEF;
+                                                        if(dano > 999)
+                                                            dano = 999;
+                                                        if(dano <= 0)
+                                                            dano = 1;
+
+                                                        /* animacao efeito */
+
+                                                        // Animacao Dano
+                                                        itoa(msg, dano);
+                                                        numeroSize.x = enemyVP[k].x + enemyVP[k].w / 2 - 47;
+                                                        numeroSize.y = enemyVP[k].y + enemyVP[k].h / 2 - 33;
+                                                        numeroSize.w = 94; numeroSize.h = 66;
+                                                        animate.alpha = 255;
+                                                        while(animate.alpha > 0){
+                                                            renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                                            SDL_RenderSetViewport(gRenderer, NULL);
+                                                            if(critical){
+                                                                TTF_SetFontOutline(gFont, 10);
+                                                                strcpy(msg, "CRITICAL!");
+                                                                renderText(msg, black);
+                                                                SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                                                                numeroSize.y -= 30;
+                                                                numeroSize.x -= 15;
+                                                                numeroSize.w += 30;
+                                                                numeroSize.h -= 20;
+                                                                SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                                                                TTF_SetFontOutline(gFont, 0);
+                                                                renderText(msg, yellow);
+                                                                SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                                                                SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                                                                SDL_RenderPresent(gRenderer);
+                                                                numeroSize.y += 30;
+                                                                numeroSize.x += 15;
+                                                                numeroSize.w -= 30;
+                                                                numeroSize.h += 20;
+
+                                                            }
+                                                            itoa(msg, dano);
+                                                            TTF_SetFontOutline(gFont, 2);
+                                                            renderText(msg, black);
+                                                            SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                                                            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                                                            TTF_SetFontOutline(gFont, 0);
+                                                            renderText(msg, color);
+                                                            SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                                                            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                                                            SDL_RenderPresent(gRenderer);
+                                                            numeroSize.y -= 3;
+                                                            animate.alpha -= 4;
+                                                        }
+                                                        critical = 0;
+                                                        inimigos[k].hp -= (dano - inimigos[k].def);
+                                                        if(inimigos[k].hp <= 0){
+                                                            inimigos[k].derrotado = 1;
+
+                                                            inimigos[k].alpha = 255;
+                                                            while(inimigos[k].alpha > 0){
+                                                                inimigos[k].alpha -= 2;
+                                                                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                                                SDL_RenderPresent(gRenderer);
+                                                            }
+                                                        }
+                                                        select.ativoc = 0;
+                                                        select.ativoe = 0;
+                                                        descarta_carta(mao, select.indexc);
+                                                        // select.indexc = -1;
+                                                        player->turno = 0;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else if(strcmp(carta_db[idcarta].carta_info.efeito, "Cura") == 0){
+                                fatorAleatorio = ((rand() % 101) + 50) / 100;
+                                dano = fatorAleatorio * player->atk * carta_db[idcarta].carta_info.multiplicador_carta;
+                                if(dano > 999)
+                                    dano = 999;
+                                if(dano <= 0)
+                                    dano = 1;
+
+                                select.ativoc = 1;
+                                player->hp += dano;
+                                if(player->hp > player->hpmax)
+                                    player->hp = player->hpmax;
+                                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                SDL_RenderPresent(gRenderer);
+                                
+                                itoa(msg, dano);
+                                numeroSize.x = 31; numeroSize.y = 600; numeroSize.w = 94; numeroSize.h = 66;
+                                animate.alpha = 255;
+                                while(animate.alpha > 0){
+                                    renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                    SDL_RenderSetViewport(gRenderer, NULL);
+                                    TTF_SetFontOutline(gFont, 2);
+                                    renderText(msg, black);
+                                    SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                                    SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                                    TTF_SetFontOutline(gFont, 0);
+                                    renderText(msg, green);
+                                    SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                                    SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                                    SDL_RenderPresent(gRenderer);
+                                    numeroSize.y -= 3;
+                                    animate.alpha -= 4;
+                                }
+
+                                select.ativoc = 0;
+                                player->turno = 0;
+                                descarta_carta(mao, select.indexc);
+                            }
+                            else if(strcmp(carta_db[idcarta].carta_info.efeito, "Escudo") == 0){
+                                select.escudo = 1;
+                                escudoCount = -1;
+                                select.ativoc = 1;
+                                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                SDL_RenderPresent(gRenderer);
+
+                                /* ANIMACAO */
+
+                                select.ativoc = 0;
+                                player->turno = 0;
+                                descarta_carta(mao, select.indexc);
+                            }
+                            else if(strcmp(carta_db[idcarta].carta_info.efeito, "Prev") == 0){
+                                select.prev = 1;
+                                prevCount = -1;
+                                select.ativoc = 1;
+                                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                SDL_RenderPresent(gRenderer);
+
+                                /* ANIMACAO */
+
+                                select.ativoc = 0;
+                                player->turno = 0;
+                                descarta_carta(mao, select.indexc);
+                            }
+                            else if(strcmp(carta_db[idcarta].carta_info.efeito, "Saque") == 0){
+                                select.ativoc = 1;
+                                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                SDL_RenderPresent(gRenderer);
+                                
+                                descarta_carta(mao, select.indexc);
+                                select.ativoc = 0;
+                                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                SDL_RenderPresent(gRenderer);
+
+                                compra_carta(deck, mao);
+                                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                SDL_RenderPresent(gRenderer);
+                                if(!mao_cheia(mao)){
+                                    compra_carta(deck, mao);
+                                    renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                    SDL_RenderPresent(gRenderer);
+                                }
+
+                                player->turno = 0;
+                            }
+                            SDL_Delay(100);
+                        }
+                    }
+                    if(!player->turno)
+                        break;
+                }
+                if(!battle)
                     break;
-                }
-            }
-        if(e->type == SDL_MOUSEBUTTONDOWN){
-            for(i = 0; i < qtd_mao(mao); i++){
-                if(mouseOver(&(cardAreaVP[i]), e) && e->button.button == SDL_BUTTON_LEFT){
-                    usa_carta(mao, i, &idcarta);
-                    if(strcmp(carta_db[idcarta].carta_info.efeito, "Ataque") == 0){
-                        dano = 10 * carta_db[idcarta].carta_info.multiplicador_carta;
-                        gModTexture = SDL_CreateTextureFromSurface(gRenderer, gCurrentSurface);
-                        SDL_RenderCopy(gRenderer, gModTexture, NULL, NULL);
-                        SDL_Delay(1000);
-                    }
-                    else if(strcmp(carta_db[idcarta].carta_info.efeito, "Cura") == 0)
-                        dano = 10 * carta_db[idcarta].carta_info.multiplicador_carta;
-                    else if(strcmp(carta_db[idcarta].carta_info.efeito, "Escudo") == 0){
-                        escudo = 1;
-                        escudoCount = -1;
-                    }
-                    else if(strcmp(carta_db[idcarta].carta_info.efeito, "Prev") == 0){
-                        prev = 1;
-                        prevCount = -1;
-                    }
-                    else if(strcmp(carta_db[idcarta].carta_info.efeito, "Saque") == 0){
-                        compra_carta(deck, mao);
-                        compra_carta(deck, mao);
-                    }
-                }
             }
         }
-        if(escudo)
+        if(!battle)
+            break;
+
+        select.ativoc = 1;
+        select.indexc = -1;
+        select.ativoe = 1;
+        select.indexe = -1;
+        // Turno Inimigos
+        for(i = 0; i <= numeroInimigos; i++){
+            while(SDL_PollEvent(e) != 0){
+                if(e->type == SDL_QUIT){
+                    *quit = 1;
+                    battle = 1;
+                }
+            }
+            inimigos[i].turno = 1;
+            while(inimigos[i].turno && !inimigos[i].derrotado){
+                strcpy(msg, "Vez do ");
+                strcat(msg, inimigo_db[inimigos[i].id].nome);
+                strcat(msg, "!");
+                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                renderBattleMessage(msg, &msgAreaTopVP);
+                SDL_RenderPresent(gRenderer);
+                while(pause){
+                    SDL_WaitEvent(e);
+                    if(e->type == SDL_MOUSEBUTTONDOWN)
+                        break;
+                }
+
+                roll = rand() % 100 + 1;
+                for(k = 0; k < 5; k++){
+                    if (inimigo_db[inimigos[i].id].chance[k].min > roll && inimigo_db[inimigos[i].id].chance[k].max <= roll)
+                        roll = k;
+                }
+                switch(k){
+                    case ATTACK:
+                        if(select.escudo){
+                            strcpy(msg, inimigo_db[inimigos[i].id].nome);
+                            strcat(msg, " tentou atacar, mas Escudo Mágico te protegeu!");
+                            renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                            renderBattleMessage(msg, &msgAreaTopVP);
+                            SDL_RenderPresent(gRenderer);
+                            while(pause){
+                                SDL_WaitEvent(e);
+                                if(e->type == SDL_MOUSEBUTTONDOWN)
+                                    break;
+                            }
+                            inimigos[i].turno = 0;
+                            // renderMessageWrapped(msg, &msgAreaTopVP);
+                            break;
+                        }
+                        fatorAleatorio = (rand() % 100 + 50)/100;
+                        dano = fatorAleatorio * inimigo_db[inimigos[i].id].ATK * inimigo_db[inimigos[i].id].comportamento.mult_atk;
+
+                        itoa(msg, dano);
+                        numeroSize.x = 31; numeroSize.y = 600; numeroSize.w = 94; numeroSize.h = 66;
+                        numeroSize.w = 94; numeroSize.h = 66;
+                        animate.alpha = 255;
+                        while(animate.alpha > 0){
+                            renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                            SDL_RenderSetViewport(gRenderer, NULL);
+                            if(critical){
+                                TTF_SetFontOutline(gFont, 10);
+                                strcpy(msg, "CRITICAL!");
+                                renderText(msg, black);
+                                SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                                numeroSize.y -= 30;
+                                numeroSize.x -= 15;
+                                numeroSize.w += 30;
+                                numeroSize.h -= 20;
+                                SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                                TTF_SetFontOutline(gFont, 0);
+                                renderText(msg, yellow);
+                                SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                                SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                                SDL_RenderPresent(gRenderer);
+                                numeroSize.y += 30;
+                                numeroSize.x += 15;
+                                numeroSize.w -= 30;
+                                numeroSize.h += 20;
+
+                            }
+                            itoa(msg, dano);
+                            TTF_SetFontOutline(gFont, 2);
+                            renderText(msg, black);
+                            SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                            TTF_SetFontOutline(gFont, 0);
+                            renderText(msg, red);
+                            SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                            SDL_RenderPresent(gRenderer);
+                            numeroSize.y -= 3;
+                            animate.alpha -= 4;
+                        }
+                        critical = 0;
+                        player->hp -= (dano - player->def);
+                        if(player->hp < 0)
+                            player->hp = 0;
+                        if(player->hp == 0){
+                            battle = 1;
+                            *quit = 1;
+                            player->gameOver = 1;
+                        }
+                    inimigos[i].turno = 0;
+                    break;
+
+                    case MUG:
+                        if(select.prev){
+                            strcpy(msg, inimigo_db[inimigos[i].id].nome);
+                            strcat(msg, " tentou te roubar, mas Punho Firme te protegeu!");
+                            renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                            renderBattleMessage(msg, &msgAreaTopVP);
+                            SDL_RenderPresent(gRenderer);
+                            while(pause){
+                                SDL_WaitEvent(e);
+                                if(e->type == SDL_MOUSEBUTTONDOWN)
+                                    break;
+                            }
+                            inimigos[i].turno = 0;
+                            break;
+                        }
+                        k = inimigo_db[inimigos[i].id].comportamento.discard_num;
+                        strcpy(msg, inimigo_db[inimigos[i].id].nome);
+                        strcat(msg, " te roubou!");
+                        renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                        renderBattleMessage(msg, &msgAreaTopVP);
+                        SDL_RenderPresent(gRenderer);
+                        while(pause){
+                            SDL_WaitEvent(e);
+                            if(e->type == SDL_MOUSEBUTTONDOWN)
+                                break;
+                        }
+                        while(k > 0){
+                            if(mao_vazia(mao)){
+                                strcpy(msg, "Sua mao está vazia!!");
+                                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                renderBattleMessage(msg, &msgAreaTopVP);
+                                SDL_RenderPresent(gRenderer);
+                                while(pause){
+                                    SDL_WaitEvent(e);
+                                    if(e->type == SDL_MOUSEBUTTONDOWN)
+                                        break;
+                                }
+                                break;
+                            }
+                            else{
+                                roll = rand() % qtd_mao(mao);
+                                consulta_mao(mao, roll, idcarta);
+                                descarta_carta(mao, roll);
+                                strcpy(msg, carta_db[idcarta].carta_info.nome_carta);
+                                strcat(msg, " foi perdida!");
+                                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                renderBattleMessage(msg, &msgAreaTopVP);
+                                SDL_RenderPresent(gRenderer);
+                                while(pause){
+                                    SDL_WaitEvent(e);
+                                    if(e->type == SDL_MOUSEBUTTONDOWN)
+                                        break;
+                                }
+                            }
+                            k--;
+                        }
+                    inimigos[i].turno = 0;
+                    break;
+
+                    case FLEE:
+                        roll = rand() % 100 + 1;
+                        if(roll <= inimigo_db[inimigos[i].id].comportamento.flee_chance){
+                            strcpy(msg, inimigo_db[inimigos[i].id].nome);
+                            strcat(msg, " fugiu!");
+                            inimigos[i].alpha = 255;
+                            while(inimigos[i].alpha > 0){
+                                inimigos[i].alpha -= 3;
+                                renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                                renderBattleMessage(msg, &msgAreaTopVP);
+                                SDL_RenderPresent(gRenderer);
+                            }
+                            inimigos[i].derrotado = 1;
+                        }
+                        else{
+                            strcpy(msg, inimigo_db[inimigos[i].id].nome);
+                            strcat(msg, " está tentando fugir...");
+                        }
+                        renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                        renderBattleMessage(msg, &msgAreaTopVP);
+                        SDL_RenderPresent(gRenderer);
+                        while(pause){
+                            SDL_WaitEvent(e);
+                            if(e->type == SDL_MOUSEBUTTONDOWN)
+                                break;
+                        }
+                    inimigos[i].turno = 0;
+                    break;
+
+                    case SPECIAL_MOVE:
+                        if(select.escudo){
+                            strcpy(msg, inimigo_db[inimigos[i].id].nome);
+                            strcat(msg, " tentou atacar, mas Escudo Mágico te protegeu!");
+                            renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                            renderBattleMessage(msg, &msgAreaTopVP);
+                            SDL_RenderPresent(gRenderer);
+                            while(pause){
+                                SDL_WaitEvent(e);
+                                if(e->type == SDL_MOUSEBUTTONDOWN)
+                                    break;
+                            }
+                            // renderMessageWrapped(msg, &msgAreaTopVP);
+                            inimigos[i].turno = 0;
+                            break;
+                        }
+
+                        strcpy(msg, inimigo_db[inimigos[i].id].nome);
+                        strcat(msg, " irá atacar!!");
+                        renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                        renderBattleMessage(msg, &msgAreaTopVP);
+                        SDL_RenderPresent(gRenderer);
+                        while(pause){
+                            SDL_WaitEvent(e);
+                            if(e->type == SDL_MOUSEBUTTONDOWN)
+                                break;
+                        }
+                        strcpy(msg, inimigo_db[inimigos[i].id].comportamento.nome_special);
+                        renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                        renderBattleMessage(msg, &msgAreaTopVP);
+                        SDL_RenderPresent(gRenderer);
+                        while(pause){
+                            SDL_WaitEvent(e);
+                            if(e->type == SDL_MOUSEBUTTONDOWN)
+                                break;
+                        }
+                        fatorAleatorio = (rand() % 100 + 50)/100;
+                        dano = fatorAleatorio * inimigo_db[inimigos[i].id].ATK * inimigo_db[inimigos[i].id].comportamento.mult_atk * inimigo_db[inimigos[i].id].comportamento.mult_special;
+
+                        itoa(msg, dano);
+                        numeroSize.x = 31; numeroSize.y = 600; numeroSize.w = 94; numeroSize.h = 66;
+                        numeroSize.w = 94; numeroSize.h = 66;
+                        animate.alpha = 255;
+                        while(animate.alpha > 0){
+                            renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                            SDL_RenderSetViewport(gRenderer, NULL);
+                            if(critical){
+                                TTF_SetFontOutline(gFont, 10);
+                                strcpy(msg, "CRITICAL!");
+                                renderText(msg, black);
+                                SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                                numeroSize.y -= 30;
+                                numeroSize.x -= 15;
+                                numeroSize.w += 30;
+                                numeroSize.h -= 20;
+                                SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                                TTF_SetFontOutline(gFont, 0);
+                                renderText(msg, yellow);
+                                SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                                SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                                SDL_RenderPresent(gRenderer);
+                                numeroSize.y += 30;
+                                numeroSize.x += 15;
+                                numeroSize.w -= 30;
+                                numeroSize.h += 20;
+
+                            }
+                            itoa(msg, dano);
+                            TTF_SetFontOutline(gFont, 2);
+                            renderText(msg, black);
+                            SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                            TTF_SetFontOutline(gFont, 0);
+                            renderText(msg, red);
+                            SDL_SetTextureAlphaMod(gFontTexture, animate.alpha);
+                            SDL_RenderCopy(gRenderer, gFontTexture, NULL, &numeroSize);
+                            SDL_RenderPresent(gRenderer);
+                            numeroSize.y -= 3;
+                            animate.alpha -= 4;
+                        }
+                        critical = 0;
+                        player->hp -= (dano - player->def);
+                        if(player->hp < 0)
+                            player->hp = 0;
+                        
+                        if(player->hp == 0){
+                            battle = 1;
+                            *quit = 1;
+                            player->gameOver = 1;
+                        }
+                    inimigos[i].turno = 0;
+                    break;
+
+                    case DEFEND:
+                        strcpy(msg, inimigo_db[inimigos[i].id].nome);
+                        strcat(msg, " está preparando para se defender.");
+                        renderBattle(player, e, &deck, &mao, enemyVP, cardAreaVP, inimigos, numeroInimigos, &select);
+                        renderBattleMessage(msg, &msgAreaTopVP);
+                        SDL_RenderPresent(gRenderer);
+                        while(pause){
+                            SDL_WaitEvent(e);
+                            if(e->type == SDL_MOUSEBUTTONDOWN)
+                                break;
+                        }
+                        inimigos[i].buff = 1;
+                        inimigos[i].buffCount = inimigo_db[inimigos[i].id].buffdefault + 1;
+                    inimigos[i].turno = 0;
+                    break;
+                }
+                if(!battle)
+                    break;
+            }
+        }
+        
+        // Fim Turno
+        if(!battle)
+            break;
+
+        battle = 0;
+        for(i = 0; i <= numeroInimigos; i++){
+            if(!inimigos[i].derrotado){
+                battle = 1;
+                break;
+            }
+        }
+
+        if(select.escudo)
             escudoCount++;
-        if(escudoCount <= 2)
-            escudo = 0;
-        if(prev)
+        if(escudoCount >= 2){
+            select.escudo = 0;
+            strcpy(msg, "Escudo Mágico se dissipou!");
+            renderBattleMessage(msg, &msgAreaTopVP);
+        }
+        if(select.prev)
             prevCount++;
-        if(prevCount <= 4)
-            prev = 0;
-        // if(!(enemy[idinimigo[i]].hp > 0))
-        //     battle = 0;
+        if(prevCount >= 4){
+            select.prev = 0;
+            strcpy(msg, "Punho Firme se dissipou!");
+            renderBattleMessage(msg, &msgAreaTopVP);
+        }
+
+        for(i = 0; i <= numeroInimigos; i++){
+            if(inimigos[i].buff)
+                inimigos[i].buffCount--;
+            if(inimigos[i].buffCount <= 0)
+                inimigos[i].buff = 0;
+        }
+        
     }
+    free(inimigos);
     battleEnd(&deck, &mao);
     return 0;
 }
@@ -669,13 +1448,13 @@ int main(int argc, char* args[]) // SDL requer que main tenha estes argumentos
         printf("init failed.\n");
     else{
         cria_db_carta();
-        loadPaths();
+        cria_db_inimigo();
         if(!loadMediaBasic())
             printf("load failed.\n");
         else{
             int quit = 0, battle = 0, i = 0;
             SDL_Event e;
-            Player player = {250, 100, 75};
+            Player player = {250, 250, 100, 75, 0, 0};
 
             // main loop
             while(!quit){
