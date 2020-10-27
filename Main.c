@@ -3,7 +3,6 @@
 #include "Screen.h"
 
 /* Só pro screenshot */
-
 							qtd = mao->qtd_cartas;
                             while(!mao_vazia(mao)){
                                 mao_para_deck(deck, mao, 0);
